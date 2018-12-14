@@ -5,10 +5,6 @@
 ## V-Zoom
 > A simple Javascript library for image zooming.
 
-[![NPM Version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-[![Downloads Stats][npm-downloads]][npm-url]
-
 ## Demo
 
 https://vdifoung.github.io/v-zoom/
@@ -71,12 +67,5 @@ VZoom.init("img", {
 Licensed under MIT license, see [LICENSE](https://github.com/vDiFoung/v-zoom/blob/master/LICENSE) for the full license.
 
 <!-- Markdown link & img dfn's -->
-[npm-image]: https://img.shields.io/npm/v/datadog-metrics.svg?style=flat-square
-[npm-url]:
-[npm-downloads]: https://img.shields.io/npm/dm/datadog-metrics.svg?style=flat-square
-[travis-image]: https://img.shields.io/travis/dbader/node-datadog-metrics/master.svg?style=flat-square
-[travis-url]:
-
-
 [represent-npm-image]: img/npm.png
 [represent-npm-url]: https://www.npmjs.com/package/v-zoom
