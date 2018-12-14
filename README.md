@@ -17,7 +17,7 @@ https://vdifoung.github.io/v-zoom/
 
 **Installing a V-Zoom module**
 
-V-Zoom is delivered primarily via npm. (<https://google.com>)
+V-Zoom is delivered primarily via npm. (<https://www.npmjs.com/package/v-zoom>)
 ```sh
 # using npm install
 $ npm i v-zoom
@@ -78,11 +78,11 @@ Licensed under MIT license, see [LICENSE](https://github.com/vDiFoung/v-zoom/blo
 
 <!-- Markdown link & img dfn's -->
 [npm-image]: https://img.shields.io/npm/v/datadog-metrics.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/datadog-metrics
+[npm-url]:
 [npm-downloads]: https://img.shields.io/npm/dm/datadog-metrics.svg?style=flat-square
 [travis-image]: https://img.shields.io/travis/dbader/node-datadog-metrics/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/dbader/node-datadog-metrics
+[travis-url]:
 
 
 [represent-npm-image]: img/npm.png
-[represent-npm-url]: https://google.com
+[represent-npm-url]: https://www.npmjs.com/package/v-zoom
