@@ -1,0 +1,16 @@
+.vz-zoom-in {
+  cursor: zoom-in !important;
+}
+
+.prevent-click {
+  pointer-events: none !important;
+}
+
+.vz-img-wrap {
+  position: relative;
+  z-index: 99999;
+  .vz-zoom-out {
+    cursor: zoom-out !important;
+  }
+}
+

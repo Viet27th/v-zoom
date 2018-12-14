@@ -1,0 +1,27 @@
+{
+  "name": "v-zoom",
+  "version": "0.9.5",
+  "description": "It's the best way to zoom an image only used plain Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vDiFoung/v-zoom.git"
+  },
+  "keywords": [
+    "zoom",
+    "vzoom",
+    "v-zoom",
+    "image",
+    "zoom image",
+    "javascript zoom image"
+  ],
+  "author": "xuandieu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vDiFoung/v-zoom/issues"
+  },
+  "homepage": "https://github.com/vDiFoung/v-zoom#readme"
+}

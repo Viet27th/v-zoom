@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": "AAAA,WAAY;EACV,MAAM,EAAE,kBAAkB;;AAG5B,cAAe;EACb,cAAc,EAAE,eAAe;;AAGjC,YAAa;EACX,QAAQ,EAAE,QAAQ;EAClB,OAAO,EAAE,KAAK;EACd,yBAAa;IACX,MAAM,EAAE,mBAAmB",
+"sources": ["../sass/v-zoom.scss"],
+"names": [],
+"file": "v-zoom.css"
+}
