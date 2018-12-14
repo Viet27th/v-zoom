@@ -67,12 +67,6 @@ VZoom.init("img", {
 | `scrollToCancel` | `Boolean` | `true` | Scrolling to cancel the image is being zoomed |
 | `zoomPercentage` | `Number` | `50` | `50%`. Percentage of zoomed picture's size is compared with screen's size. To change zoom scale for each picture, use `data-vzoom-scale="Number"` attribute <br/> Example: <br/> `<img src="img/thumbnail.png" data-vzoom-scale="1.95">` |
 
-
-## Release History
-
-* 27.9.11
-    * First upload
-
 ## License
 Licensed under MIT license, see [LICENSE](https://github.com/vDiFoung/v-zoom/blob/master/LICENSE) for the full license.
 
