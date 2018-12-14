@@ -1,6 +1,6 @@
 {
   "name": "v-zoom",
-  "version": "0.9.5",
+  "version": "0.9.11",
   "description": "It's the best way to zoom an image only used plain Javascript",
   "main": "index.js",
   "scripts": {
