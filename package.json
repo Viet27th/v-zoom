@@ -2,7 +2,7 @@
   "name": "v-zoom",
   "version": "0.9.11",
   "description": "It's the best way to zoom an image only used plain Javascript",
-  "main": "index.js",
+  "main": "dist/js/v-zoom",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
