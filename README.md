@@ -23,14 +23,12 @@ $ npm i v-zoom
 
 If, for any reason, you are constrained to a non-module environment (e.g. no bundlers such as webpack) - don’t fret. Just embed:
 ```html
-<link rel="stylesheet" href="dist/css/v-zoom.min.css">
 <script src="dist/js/v-zoom.min.js"></script>
 ```
 ## Usage
 If you’re using a bundler, e.g. webpack, you’ll need to import v-zoom.
 ```js
-import 'v-zoom/dist/js/v-zoom';
-import 'v-zoom/dist/css/v-zoom.css';
+import "v-zoom";
 ```
 To create v-zoom instance.
 ```js
