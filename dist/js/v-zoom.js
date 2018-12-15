@@ -15,6 +15,9 @@
 +function () {
   "use strict";
 
+  const backgroundId = "vz-bg";
+  const wrappedImageId = "vz-wrapped-img";
+
   const DefaultOptions = {
 	zoomEffect: "translate",
 	duration: 279,
@@ -23,30 +26,12 @@
 	zoomPercentage: 50,
   };
 
-  let ImgToZoom = {
-	scale: 1
-  };
-
-  let ElementWrappedImage = {
-	className: "vz-img-wrap",
-	translateX: 0,
-	translateY: 0
-  };
-
-  let ElementPageBackground = {
-	idName: "vz-bg",
-	opacity: 0
-  };
-
-  let IntervalList = {
+  let IntervalIdList = {
 	backgroundPageOpacity: "",
 	wrappedImgTranslate: "",
 	imgScale: ""
   };
 
-  const Selector = {
-	elementHasData: ".vz-img-wrap .vz-js"
-  };
 
   let VZoom = function () {
 	let init = function (selector, option) {
@@ -60,48 +45,257 @@
 
   let Actions = function (el, option) {
 	this.el = el;
-	this.option = option;
-	this.vzoomScale = el.dataset.vzoomScale;
+	this.option = {...option};  //Clone Obj
+	this.option.vzoomScale = el.dataset.vzoomScale;
+	// this.vzoomScale = el.dataset.vzoomScale;
 	this.currentTimeExecutedEvent = 0;
+	this.IntervalIdList = IntervalIdList;
 
-	this.ImgToZoom = ImgToZoom;
-	this.ElementWrappedImage = ElementWrappedImage;
-	this.ElementPageBackground = ElementPageBackground;
-	this.IntervalList = IntervalList;
-
-	el.classList.add("vz-zoom-in", "vz-zoom-out", "vz-js");
+	this.el.style.cursor = 'zoom-in';
 
 	el.addEventListener("click", (e) => {
 	  e.stopPropagation();
-	  let isZoom = el.parentNode.classList.contains(this.ElementWrappedImage.className);
-	  if (!isZoom) {
-		this.handleNodeWrappedImg(true);
-		this.handlePageBackground(true);
+	  if(e.target.classList.contains("vz-zoomed")) {
+		this.zoomCancel();
+		return;
+	  }
 
-		if (option.zoomEffect.toUpperCase() === "SCALE") {
-		  this.effectScale(true);
-		}
-		else if (option.zoomEffect.toUpperCase() === "TRANSLATE") {
-		  this.effectTranslate(true);
-		}
-		else {
-		  this.effectTranslate(true);
-		}
-
-		if (option.scrollToCancel) {
-		  this.documentScrollToCancel(true);
-		}
-
-		document.body.addEventListener('click', this.handleCommon);
-
+	  e.target.classList.add("vz-zoomed");
+	  e.target.style.cursor = 'zoom-out';
+	  this.handleBackground(true);
+	  this.handleNodeWrappedImg(true);
+	  this.enableDocumentClickToCancel(true);
+	  if (this.option.scrollToCancel) {
+		this.enableDocumentScrollToCancel(true);
+	  }
+	  if (this.option.zoomEffect.toUpperCase() === "SCALE") {
+		this.effectScale(true);
 	  }
 	  else {
-		this.zoomCancel();
+		this.effectTranslate(true)
 	  }
 
 	});
 
   };
+
+  Actions.prototype.handleBackground = function(toggle) {
+	if(toggle) {
+	  let background = document.createElement("div");
+	  background.setAttribute("id", backgroundId);
+	  background.setAttribute("style", `position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: ${this.option.backgroundColor}; z-index: 9999; opacity: 0;`);
+	  document.body.appendChild(background);
+	  // Resolve issue: document listen click event doesn't work on mobile
+	  background.addEventListener('click', () => {})
+
+	  let startTime = Date.now();
+	  this.IntervalIdList.backgroundPageOpacity = setInterval(() => {
+		if ((Date.now() - startTime) > this.option.duration) {
+		  background.style.opacity = "1";
+		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
+		  // Calculate time executed events.
+		  this.currentTimeExecutedEvent = parseInt(this.option.duration);
+		}
+		else {
+		  background.style.opacity = `${(Date.now() - startTime) / this.option.duration}`;
+		  // Calculate time executed events.
+		  this.currentTimeExecutedEvent = Date.now() - startTime;
+		}
+	  }, 0);
+	}
+	else {
+	  let background = document.getElementById(backgroundId);
+	  let currentOpacity = parseFloat(background.style.opacity);
+	  clearInterval(this.IntervalIdList.backgroundPageOpacity);
+
+	  let startTime = Date.now();
+	  this.IntervalIdList.backgroundPageOpacity = setInterval(() => {
+		if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+		  background.style.opacity = "0";
+		  background.remove();
+		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
+		  document.body.style.pointerEvents = "";
+		  // Reset value when executed event done.
+		  this.currentTimeExecutedEvent = 0;
+		}
+		else {
+		  // Prevent click to the image zoomed when zoom canceling
+		  document.body.style.pointerEvents = "none";
+		  background.style.opacity = `${currentOpacity * ((this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent)}`;
+		}
+	  }, 0);
+
+	}
+  };
+
+  Actions.prototype.handleNodeWrappedImg = function(toggle) {
+	if(toggle) {
+	  let newNodeWrapImg = document.createElement("div");
+	  newNodeWrapImg.setAttribute("id", wrappedImageId);
+	  this.el.parentNode.insertBefore(newNodeWrapImg, this.el);
+	  newNodeWrapImg.appendChild(this.el);
+	  newNodeWrapImg.style.cssText = "position:relative; z-index: 99999;";
+	  // Resolve issue: document listen click event doesn't work on mobile
+	  newNodeWrapImg.addEventListener('click', () => {})
+
+	  let imgWidth = this.el.offsetWidth;
+	  let imgHeight = this.el.offsetHeight;
+
+	  let viewportPointCenter = {
+		x: window.innerWidth / 2,
+		y: window.innerHeight / 2
+	  };
+	  let elementTargetedPointCenter = {
+		x: this.el.getBoundingClientRect().left + imgWidth / 2,
+		y: this.el.getBoundingClientRect().top + imgHeight / 2
+	  };
+
+	  let startTime = Date.now();
+	  this.IntervalIdList.wrappedImgTranslate = setInterval(() => {
+		if ((Date.now() - startTime) >= this.option.duration) {
+		  newNodeWrapImg.style.transform = `translate(${viewportPointCenter.x - elementTargetedPointCenter.x}px,${viewportPointCenter.y - elementTargetedPointCenter.y}px)`;
+		  clearInterval(this.IntervalIdList.wrappedImgTranslate);
+		}
+		else {
+		  newNodeWrapImg.style.transform = `translate(${((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.x - elementTargetedPointCenter.x)}px,${((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.y - elementTargetedPointCenter.y)}px)`;
+		}
+	  }, 0);
+	}
+	else {
+	  let parent = this.el.parentNode;
+	  if (parent.id === wrappedImageId) {
+		let style = window.getComputedStyle(parent);
+		let matrix = new WebKitCSSMatrix(style.webkitTransform);
+		let translatedX = matrix.e;
+		let translatedY = matrix.f;
+
+		clearInterval(this.IntervalIdList.wrappedImgTranslate);
+		let startTime = Date.now();
+		this.IntervalIdList.wrappedImgTranslate = setInterval(() => {
+		  if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+			parent.style.transform = `translate(0px,0px)`;
+			clearInterval(this.IntervalIdList.wrappedImgTranslate);
+			parent.parentNode.insertBefore(this.el, parent);
+			parent.remove();
+		  }
+		  else {
+			let coordinateX = translatedX * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
+			let coordinateY = translatedY * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
+			parent.style.transform = `translate(${coordinateX}px,${coordinateY}px)`;
+		  }
+		}, 0);
+	  }
+	}
+  };
+
+  Actions.prototype.enableDocumentScrollToCancel = function(toggle) {
+	if(toggle) {
+	  document.addEventListener('scroll', this.handleEvt);
+	}
+	else {
+	  document.removeEventListener('scroll', this.handleEvt);
+	}
+  };
+  Actions.prototype.enableDocumentClickToCancel = function(toggle) {
+	if(toggle) {
+	  document.addEventListener('click', this.handleEvt);
+	}
+	else {
+	  document.removeEventListener('click', this.handleEvt);
+	}
+  };
+  Actions.prototype.handleEvt = function() {
+	let elZoomedData = document.getElementsByClassName("vz-zoomed")[0].data;
+	elZoomedData.zoomCancel();
+  };
+
+  Actions.prototype.effectTranslate = function (toggle) {
+	if (toggle) {
+	  let zoomTo = (typeof this.option.vzoomScale === "undefined") ? this.calculateScaleZoom() : parseFloat(this.option.vzoomScale);
+
+	  let startTime = Date.now();
+	  this.IntervalIdList.imgScale = setInterval(() => {
+		if ((Date.now() - startTime) >= this.option.duration) {
+		  this.el.style.transform = `scale(${zoomTo})`;
+		  clearInterval(this.IntervalIdList.imgScale);
+		}
+		else {
+		  this.el.style.transform = `scale(${1 + ((Date.now() - startTime) / this.option.duration) * (zoomTo - 1)})`;
+		}
+	  }, 0);
+	}
+	else {
+	  let style = window.getComputedStyle(this.el);
+	  let matrix = new WebKitCSSMatrix(style.webkitTransform);
+	  let currentScale = matrix.d;
+
+	  clearInterval(this.IntervalIdList.imgScale);
+	  let startTime = Date.now();
+	  this.IntervalIdList.imgScale = setInterval(() => {
+		if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+		  this.el.style.transform = `scale(1)`;
+		  clearInterval(this.IntervalIdList.imgScale);
+		}
+		else {
+		  this.el.style.transform = `scale(${currentScale - ((Date.now() - startTime) / this.currentTimeExecutedEvent) * (currentScale - 1)})`;
+		}
+	  }, 0);
+	}
+  };
+
+  Actions.prototype.effectScale = function (toggle) {
+	if (toggle) {
+	  let zoomTo = (typeof this.option.vzoomScale === "undefined") ? this.calculateScaleZoom() : parseFloat(this.option.vzoomScale);
+
+	  let startTime = Date.now();
+	  this.IntervalIdList.imgScale = setInterval(() => {
+		if ((Date.now() - startTime) >= this.option.duration) {
+		  this.el.style.transform = `scale(${zoomTo})`;
+		  clearInterval(this.IntervalIdList.imgScale);
+		}
+		else {
+		  this.el.style.transform = `scale(${((Date.now() - startTime) / this.option.duration) * zoomTo})`;
+		}
+	  }, 0);
+	}
+	else {
+	  let style = window.getComputedStyle(this.el);
+	  let matrix = new WebKitCSSMatrix(style.webkitTransform);
+	  let currentScale = matrix.d;
+
+	  clearInterval(this.IntervalIdList.imgScale);
+	  let startTime = Date.now();
+	  this.IntervalIdList.imgScale = setInterval(() => {
+		if ((Date.now() - startTime) >= this.option.duration) {
+		  this.el.style.transform = `scale(1)`;
+		  currentScale = 1;
+		  clearInterval(this.IntervalIdList.imgScale);
+		}
+		else {
+		  this.el.style.transform = `scale(${currentScale * (this.option.duration - (Date.now() - startTime)) / this.option.duration})`;
+		}
+	  }, 0);
+	}
+  };
+
+  Actions.prototype.zoomCancel = function() {
+	this.el.classList.remove("vz-zoomed");
+	this.el.style.cursor = 'zoom-in';
+	this.handleBackground(false);
+	this.handleNodeWrappedImg(false);
+	this.enableDocumentClickToCancel(false);
+	if (this.option.scrollToCancel) {
+	  this.enableDocumentScrollToCancel(false);
+	}
+	if (this.option.zoomEffect.toUpperCase() === "SCALE") {
+	  this.effectScale(false);
+	}
+	else {
+	  this.effectTranslate(false)
+	}
+
+  };
+
 
   Actions.prototype.isMobile = function () {
 	return /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent)
@@ -123,217 +317,6 @@
 	return scaleTo;
   };
 
-  Actions.prototype.handleNodeWrappedImg = function (toggle) {
-	if (toggle) {
-	  let newNodeWrapImg = document.createElement("div");
-	  newNodeWrapImg.className = this.ElementWrappedImage.className;
-	  this.el.parentNode.insertBefore(newNodeWrapImg, this.el);
-	  newNodeWrapImg.appendChild(this.el);
-	  let imgWidth = this.el.offsetWidth;
-	  let imgHeight = this.el.offsetHeight;
-
-	  let viewportPointCenter = {
-		x: window.innerWidth / 2,
-		y: window.innerHeight / 2
-	  };
-	  let elementTargetedPointCenter = {
-		x: this.el.getBoundingClientRect().left + imgWidth / 2,
-		y: this.el.getBoundingClientRect().top + imgHeight / 2
-	  };
-
-	  let startTime = Date.now();
-	  this.IntervalList.wrappedImgTranslate = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
-		  this.ElementWrappedImage.translateX = viewportPointCenter.x - elementTargetedPointCenter.x;
-		  this.ElementWrappedImage.translateY = viewportPointCenter.y - elementTargetedPointCenter.y;
-		  newNodeWrapImg.style.transform = `translate(${this.ElementWrappedImage.translateX}px,${this.ElementWrappedImage.translateY}px)`;
-		  clearInterval(this.IntervalList.wrappedImgTranslate);
-		}
-		else {
-		  this.ElementWrappedImage.translateX = ((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.x - elementTargetedPointCenter.x);
-		  this.ElementWrappedImage.translateY = ((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.y - elementTargetedPointCenter.y);
-		  newNodeWrapImg.style.transform = `translate(${this.ElementWrappedImage.translateX}px,${this.ElementWrappedImage.translateY}px)`;
-		}
-	  }, 0);
-
-	  newNodeWrapImg.addEventListener('click', this.handleCommon);
-	}
-	else {
-	  let parent = this.el.parentNode;
-	  if (parent.classList.contains(this.ElementWrappedImage.className)) {
-		clearInterval(this.IntervalList.wrappedImgTranslate);
-		let startTime = Date.now();
-		this.IntervalList.wrappedImgTranslate = setInterval(() => {
-		  if ((Date.now() - startTime) >= this.option.duration || (Date.now() - startTime) >= this.currentTimeExecutedEvent) {
-			parent.style.transform = `translate(0px,0px)`;
-			this.ElementWrappedImage.translateX = 0;
-			this.ElementWrappedImage.translateY = 0;
-			clearInterval(this.IntervalList.wrappedImgTranslate);
-			parent.parentNode.insertBefore(this.el, parent);
-			parent.remove();
-		  }
-		  else {
-			let coordinateX = this.ElementWrappedImage.translateX * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
-			let coordinateY = this.ElementWrappedImage.translateY * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
-			parent.style.transform = `translate(${coordinateX}px,${coordinateY}px)`;
-		  }
-		}, 0);
-
-	  }
-	}
-  };
-
-  Actions.prototype.handlePageBackground = function (toggle) {
-	if (toggle) {
-	  let background = document.createElement("div");
-	  background.setAttribute("id", this.ElementPageBackground.idName);
-	  background.setAttribute("style", `position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: ${this.option.backgroundColor}; z-index: 9999; opacity: 0;`);
-	  document.body.appendChild(background);
-
-	  let startTime = Date.now();
-	  this.IntervalList.backgroundPageOpacity = setInterval(() => {
-		if ((Date.now() - startTime) > parseInt(this.option.duration) || parseInt(this.option.duration) === 0) {
-		  background.style.opacity = "1";
-		  this.ElementPageBackground.opacity = 1;
-		  this.currentTimeExecutedEvent = this.option.duration;
-		  clearInterval(this.IntervalList.backgroundPageOpacity);
-		}
-		else {
-		  this.ElementPageBackground.opacity = (Date.now() - startTime) / this.option.duration;
-		  background.style.opacity = `${this.ElementPageBackground.opacity}`;
-		  // Calculate time executed events.
-		  this.currentTimeExecutedEvent = Date.now() - startTime;
-		}
-	  }, 0);
-
-	  background.addEventListener("click", this.handleCommon);
-
-	}
-	else {
-	  clearInterval(this.IntervalList.backgroundPageOpacity);
-
-	  let background = document.getElementById(this.ElementPageBackground.idName);
-	  let startTime = Date.now();
-	  let animationEffectRemoveBackground = setInterval(() => {
-		if ((Date.now() - startTime) > parseInt(this.option.duration) || (Date.now() - startTime) >this.currentTimeExecutedEvent) {
-		  background.style.opacity = "0";
-		  this.ElementPageBackground.opacity = 0;
-		  background.remove();
-		  clearInterval(animationEffectRemoveBackground);
-		  document.body.classList.remove('prevent-click');
-		}
-		else {
-		  document.body.classList.add('prevent-click');
-
-		  background.style.opacity = `${this.ElementPageBackground.opacity * ((this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent)}`;
-		}
-	  }, 0);
-	}
-  };
-
-  Actions.prototype.documentScrollToCancel = function (toggle) {
-	if (toggle) {
-	  document.addEventListener("scroll", this.handleCommon);
-	}
-	else {
-	  document.removeEventListener("scroll", this.handleCommon);
-	}
-  };
-
-
-  Actions.prototype.handleCommon = function () {
-	let elementData = document.querySelector(Selector.elementHasData).data;
-	elementData.zoomCancel();
-  };
-
-  Actions.prototype.effectTranslate = function (toggle) {
-	let zoomTo = (typeof this.vzoomScale === "undefined") ? this.calculateScaleZoom() : parseFloat(this.vzoomScale);
-
-	if (toggle) {
-	  let startTime = Date.now();
-
-	  this.IntervalList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
-		  this.el.style.transform = `scale(${zoomTo})`;
-		  this.ImgToZoom.scale = zoomTo;
-		  clearInterval(this.IntervalList.imgScale);
-		}
-		else {
-		  this.ImgToZoom.scale = 1 + ((Date.now() - startTime) / this.option.duration) * (zoomTo - 1);
-		  this.el.style.transform = `scale(${this.ImgToZoom.scale})`;
-		}
-	  }, 0);
-
-
-	}
-	else {
-	  clearInterval(this.IntervalList.imgScale);
-	  let startTime = Date.now();
-	  this.IntervalList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration || (Date.now() - startTime) >= this.currentTimeExecutedEvent) {
-		  this.el.style.transform = `scale(1)`;
-		  this.ImgToZoom.scale = 1;
-		  clearInterval(this.IntervalList.imgScale);
-		}
-		else {
-		  this.el.style.transform = `scale(${this.ImgToZoom.scale - ((Date.now() - startTime) / this.currentTimeExecutedEvent) * (this.ImgToZoom.scale - 1)})`;
-		}
-	  }, 0);
-
-	}
-  };
-
-  Actions.prototype.effectScale = function (toggle) {
-	let zoomTo = (typeof this.vzoomScale === "undefined") ? this.calculateScaleZoom() : parseFloat(this.vzoomScale);
-
-	if (toggle) {
-	  let startTime = Date.now();
-	  let animationScaleEffect = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
-		  this.el.style.transform = `scale(${zoomTo})`;
-		  clearInterval(animationScaleEffect);
-		}
-		else {
-		  this.el.style.transform = `scale(${((Date.now() - startTime) / this.option.duration) * zoomTo})`;
-		}
-	  }, 0);
-
-	}
-	else {
-
-	  let startTime = Date.now();
-	  let animationScaleEffect = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
-		  this.el.style.transform = `scale(1)`;
-		  clearInterval(animationScaleEffect);
-		}
-		else {
-		  this.el.style.transform = `scale(${zoomTo * (this.option.duration - (Date.now() - startTime)) / this.option.duration})`;
-		}
-	  }, 0);
-	}
-  };
-
-  Actions.prototype.zoomCancel = function () {
-	this.handlePageBackground(false);
-	this.handleNodeWrappedImg(false);
-
-	if (this.option.zoomEffect.toUpperCase() === "SCALE") {
-	  this.effectScale(false);
-	}
-	else if (this.option.zoomEffect.toUpperCase() === "TRANSLATE") {
-	  this.effectTranslate(false);
-	}
-	else {
-	  this.effectTranslate(false);
-	}
-
-	if (this.option.scrollToCancel) {
-	  this.documentScrollToCancel(false);
-	}
-
-	document.body.removeEventListener('click', this.handleCommon);
-  };
 
   if (typeof window !== "undefined") {
 	window.VZoom = VZoom;
