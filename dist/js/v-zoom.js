@@ -47,7 +47,6 @@
 	this.el = el;
 	this.option = {...option};  //Clone Obj
 	this.option.vzoomScale = el.dataset.vzoomScale;
-	// this.vzoomScale = el.dataset.vzoomScale;
 	this.currentTimeExecutedEvent = 0;
 	this.IntervalIdList = IntervalIdList;
 
