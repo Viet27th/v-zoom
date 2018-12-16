@@ -27,9 +27,9 @@
   };
 
   let IntervalIdList = {
-	backgroundPageOpacity: "",
-	wrappedImgTranslate: "",
-	imgScale: ""
+	backgroundPageOpacity: 0,
+	wrappedImgTranslate: 0,
+	imgScale: 0
   };
 
 
@@ -50,17 +50,17 @@
 	this.currentTimeExecutedEvent = 0;
 	this.IntervalIdList = IntervalIdList;
 
-	this.el.style.cursor = 'zoom-in';
+	this.el.style.cursor = "zoom-in";
 
 	el.addEventListener("click", (e) => {
 	  e.stopPropagation();
-	  if(e.target.classList.contains("vz-zoomed")) {
+	  if (e.target.classList.contains("vz-zoomed")) {
 		this.zoomCancel();
 		return;
 	  }
 
 	  e.target.classList.add("vz-zoomed");
-	  e.target.style.cursor = 'zoom-out';
+	  e.target.style.cursor = "zoom-out";
 	  this.handleBackground(true);
 	  this.handleNodeWrappedImg(true);
 	  this.enableDocumentClickToCancel(true);
@@ -71,34 +71,36 @@
 		this.effectScale(true);
 	  }
 	  else {
-		this.effectTranslate(true)
+		this.effectTranslate(true);
 	  }
 
 	});
 
   };
 
-  Actions.prototype.handleBackground = function(toggle) {
-	if(toggle) {
+  Actions.prototype.handleBackground = function (toggle) {
+	if (toggle) {
 	  let background = document.createElement("div");
 	  background.setAttribute("id", backgroundId);
 	  background.setAttribute("style", `position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: ${this.option.backgroundColor}; z-index: 9999; opacity: 0;`);
 	  document.body.appendChild(background);
 	  // Resolve issue: document listen click event doesn't work on mobile
-	  background.addEventListener('click', () => {})
+	  background.addEventListener("click", () => {
+	  });
 
 	  let startTime = Date.now();
 	  this.IntervalIdList.backgroundPageOpacity = setInterval(() => {
-		if ((Date.now() - startTime) > this.option.duration) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= parseFloat(this.option.duration)) {
 		  background.style.opacity = "1";
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
 		  // Calculate time executed events.
 		  this.currentTimeExecutedEvent = parseInt(this.option.duration);
 		}
 		else {
-		  background.style.opacity = `${(Date.now() - startTime) / this.option.duration}`;
+		  background.style.opacity = `${slideTime / this.option.duration}`;
 		  // Calculate time executed events.
-		  this.currentTimeExecutedEvent = Date.now() - startTime;
+		  this.currentTimeExecutedEvent = slideTime;
 		}
 	  }, 0);
 	}
@@ -109,7 +111,8 @@
 
 	  let startTime = Date.now();
 	  this.IntervalIdList.backgroundPageOpacity = setInterval(() => {
-		if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= this.currentTimeExecutedEvent) {
 		  background.style.opacity = "0";
 		  background.remove();
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
@@ -120,22 +123,23 @@
 		else {
 		  // Prevent click to the image zoomed when zoom canceling
 		  document.body.style.pointerEvents = "none";
-		  background.style.opacity = `${currentOpacity * ((this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent)}`;
+		  background.style.opacity = `${currentOpacity * ((this.currentTimeExecutedEvent - slideTime) / this.currentTimeExecutedEvent)}`;
 		}
 	  }, 0);
 
 	}
   };
 
-  Actions.prototype.handleNodeWrappedImg = function(toggle) {
-	if(toggle) {
+  Actions.prototype.handleNodeWrappedImg = function (toggle) {
+	if (toggle) {
 	  let newNodeWrapImg = document.createElement("div");
 	  newNodeWrapImg.setAttribute("id", wrappedImageId);
 	  this.el.parentNode.insertBefore(newNodeWrapImg, this.el);
 	  newNodeWrapImg.appendChild(this.el);
 	  newNodeWrapImg.style.cssText = "position:relative; z-index: 99999;";
 	  // Resolve issue: document listen click event doesn't work on mobile
-	  newNodeWrapImg.addEventListener('click', () => {})
+	  newNodeWrapImg.addEventListener("click", () => {
+	  });
 
 	  let imgWidth = this.el.offsetWidth;
 	  let imgHeight = this.el.offsetHeight;
@@ -151,12 +155,13 @@
 
 	  let startTime = Date.now();
 	  this.IntervalIdList.wrappedImgTranslate = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= parseFloat(this.option.duration)) {
 		  newNodeWrapImg.style.transform = `translate(${viewportPointCenter.x - elementTargetedPointCenter.x}px,${viewportPointCenter.y - elementTargetedPointCenter.y}px)`;
 		  clearInterval(this.IntervalIdList.wrappedImgTranslate);
 		}
 		else {
-		  newNodeWrapImg.style.transform = `translate(${((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.x - elementTargetedPointCenter.x)}px,${((Date.now() - startTime) / this.option.duration) * (viewportPointCenter.y - elementTargetedPointCenter.y)}px)`;
+		  newNodeWrapImg.style.transform = `translate(${(slideTime / this.option.duration) * (viewportPointCenter.x - elementTargetedPointCenter.x)}px,${(slideTime / this.option.duration) * (viewportPointCenter.y - elementTargetedPointCenter.y)}px)`;
 		}
 	  }, 0);
 	}
@@ -171,15 +176,16 @@
 		clearInterval(this.IntervalIdList.wrappedImgTranslate);
 		let startTime = Date.now();
 		this.IntervalIdList.wrappedImgTranslate = setInterval(() => {
-		  if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+		  let slideTime = Date.now() - startTime;
+		  if (slideTime >= this.currentTimeExecutedEvent) {
 			parent.style.transform = `translate(0px,0px)`;
 			clearInterval(this.IntervalIdList.wrappedImgTranslate);
 			parent.parentNode.insertBefore(this.el, parent);
 			parent.remove();
 		  }
 		  else {
-			let coordinateX = translatedX * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
-			let coordinateY = translatedY * (this.currentTimeExecutedEvent - (Date.now() - startTime)) / this.currentTimeExecutedEvent;
+			let coordinateX = translatedX * (this.currentTimeExecutedEvent - slideTime) / this.currentTimeExecutedEvent;
+			let coordinateY = translatedY * (this.currentTimeExecutedEvent - slideTime) / this.currentTimeExecutedEvent;
 			parent.style.transform = `translate(${coordinateX}px,${coordinateY}px)`;
 		  }
 		}, 0);
@@ -187,23 +193,23 @@
 	}
   };
 
-  Actions.prototype.enableDocumentScrollToCancel = function(toggle) {
-	if(toggle) {
-	  document.addEventListener('scroll', this.handleEvt);
+  Actions.prototype.enableDocumentScrollToCancel = function (toggle) {
+	if (toggle) {
+	  document.addEventListener("scroll", this.handleEvt);
 	}
 	else {
-	  document.removeEventListener('scroll', this.handleEvt);
+	  document.removeEventListener("scroll", this.handleEvt);
 	}
   };
-  Actions.prototype.enableDocumentClickToCancel = function(toggle) {
-	if(toggle) {
-	  document.addEventListener('click', this.handleEvt);
+  Actions.prototype.enableDocumentClickToCancel = function (toggle) {
+	if (toggle) {
+	  document.addEventListener("click", this.handleEvt);
 	}
 	else {
-	  document.removeEventListener('click', this.handleEvt);
+	  document.removeEventListener("click", this.handleEvt);
 	}
   };
-  Actions.prototype.handleEvt = function() {
+  Actions.prototype.handleEvt = function () {
 	let elZoomedData = document.getElementsByClassName("vz-zoomed")[0].data;
 	elZoomedData.zoomCancel();
   };
@@ -214,12 +220,13 @@
 
 	  let startTime = Date.now();
 	  this.IntervalIdList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= parseFloat(this.option.duration)) {
 		  this.el.style.transform = `scale(${zoomTo})`;
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
 		else {
-		  this.el.style.transform = `scale(${1 + ((Date.now() - startTime) / this.option.duration) * (zoomTo - 1)})`;
+		  this.el.style.transform = `scale(${1 + (slideTime / this.option.duration) * (zoomTo - 1)})`;
 		}
 	  }, 0);
 	}
@@ -231,12 +238,13 @@
 	  clearInterval(this.IntervalIdList.imgScale);
 	  let startTime = Date.now();
 	  this.IntervalIdList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.currentTimeExecutedEvent) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= this.currentTimeExecutedEvent) {
 		  this.el.style.transform = `scale(1)`;
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
 		else {
-		  this.el.style.transform = `scale(${currentScale - ((Date.now() - startTime) / this.currentTimeExecutedEvent) * (currentScale - 1)})`;
+		  this.el.style.transform = `scale(${currentScale - (slideTime / this.currentTimeExecutedEvent) * (currentScale - 1)})`;
 		}
 	  }, 0);
 	}
@@ -248,12 +256,13 @@
 
 	  let startTime = Date.now();
 	  this.IntervalIdList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= parseFloat(this.option.duration)) {
 		  this.el.style.transform = `scale(${zoomTo})`;
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
 		else {
-		  this.el.style.transform = `scale(${((Date.now() - startTime) / this.option.duration) * zoomTo})`;
+		  this.el.style.transform = `scale(${(slideTime / this.option.duration) * zoomTo})`;
 		}
 	  }, 0);
 	}
@@ -265,21 +274,22 @@
 	  clearInterval(this.IntervalIdList.imgScale);
 	  let startTime = Date.now();
 	  this.IntervalIdList.imgScale = setInterval(() => {
-		if ((Date.now() - startTime) >= this.option.duration) {
+		let slideTime = Date.now() - startTime;
+		if (slideTime >= this.currentTimeExecutedEvent) {
 		  this.el.style.transform = `scale(1)`;
 		  currentScale = 1;
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
 		else {
-		  this.el.style.transform = `scale(${currentScale * (this.option.duration - (Date.now() - startTime)) / this.option.duration})`;
+		  this.el.style.transform = `scale(${currentScale * (this.currentTimeExecutedEvent - slideTime) / this.currentTimeExecutedEvent})`;
 		}
 	  }, 0);
 	}
   };
 
-  Actions.prototype.zoomCancel = function() {
+  Actions.prototype.zoomCancel = function () {
 	this.el.classList.remove("vz-zoomed");
-	this.el.style.cursor = 'zoom-in';
+	this.el.style.cursor = "zoom-in";
 	this.handleBackground(false);
 	this.handleNodeWrappedImg(false);
 	this.enableDocumentClickToCancel(false);
@@ -290,7 +300,7 @@
 	  this.effectScale(false);
 	}
 	else {
-	  this.effectTranslate(false)
+	  this.effectTranslate(false);
 	}
 
   };
@@ -315,7 +325,6 @@
 
 	return scaleTo;
   };
-
 
   if (typeof window !== "undefined") {
 	window.VZoom = VZoom;
