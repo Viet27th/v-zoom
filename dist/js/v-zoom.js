@@ -116,7 +116,7 @@
 		  background.style.opacity = "0";
 		  background.remove();
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
-		  document.body.style.pointerEvents = "";
+		  document.body.style.removeProperty("pointer-events");
 		  // Reset value when executed event done.
 		  this.currentTimeExecutedEvent = 0;
 		}
@@ -178,7 +178,7 @@
 		this.IntervalIdList.wrappedImgTranslate = setInterval(() => {
 		  let slideTime = Date.now() - startTime;
 		  if (slideTime >= this.currentTimeExecutedEvent) {
-			parent.style.transform = `translate(0px,0px)`;
+			parent.style.removeProperty("transform");
 			clearInterval(this.IntervalIdList.wrappedImgTranslate);
 			parent.parentNode.insertBefore(this.el, parent);
 			parent.remove();
@@ -240,7 +240,7 @@
 	  this.IntervalIdList.imgScale = setInterval(() => {
 		let slideTime = Date.now() - startTime;
 		if (slideTime >= this.currentTimeExecutedEvent) {
-		  this.el.style.transform = `scale(1)`;
+		  this.el.style.removeProperty("transform");
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
 		else {
@@ -276,7 +276,7 @@
 	  this.IntervalIdList.imgScale = setInterval(() => {
 		let slideTime = Date.now() - startTime;
 		if (slideTime >= this.currentTimeExecutedEvent) {
-		  this.el.style.transform = `scale(1)`;
+		  this.el.style.removeProperty("transform");
 		  currentScale = 1;
 		  clearInterval(this.IntervalIdList.imgScale);
 		}
