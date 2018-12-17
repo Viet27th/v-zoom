@@ -45,9 +45,10 @@
 
   let Actions = function (el, option) {
 	this.el = el;
-	this.option = {...option};  //Clone Obj
+	this.option = {...option};
 	this.option.vzoomScale = el.dataset.vzoomScale;
 	this.currentTimeExecutedEvent = 0;
+
 	this.IntervalIdList = IntervalIdList;
 
 	this.el.style.cursor = "zoom-in";
@@ -84,7 +85,6 @@
 	  background.setAttribute("id", backgroundId);
 	  background.setAttribute("style", `position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: ${this.option.backgroundColor}; z-index: 9999; opacity: 0;`);
 	  document.body.appendChild(background);
-	  // Resolve issue: document listen click event doesn't work on mobile
 	  background.addEventListener("click", () => {
 	  });
 
@@ -94,7 +94,6 @@
 		if (slideTime >= parseFloat(this.option.duration)) {
 		  background.style.opacity = "1";
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
-		  // Calculate time executed events.
 		  this.currentTimeExecutedEvent = parseInt(this.option.duration);
 		}
 		else {
@@ -117,11 +116,9 @@
 		  background.remove();
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
 		  document.body.style.removeProperty("pointer-events");
-		  // Reset value when executed event done.
 		  this.currentTimeExecutedEvent = 0;
 		}
 		else {
-		  // Prevent click to the image zoomed when zoom canceling
 		  document.body.style.pointerEvents = "none";
 		  background.style.opacity = `${currentOpacity * ((this.currentTimeExecutedEvent - slideTime) / this.currentTimeExecutedEvent)}`;
 		}
@@ -137,10 +134,8 @@
 	  this.el.parentNode.insertBefore(newNodeWrapImg, this.el);
 	  newNodeWrapImg.appendChild(this.el);
 	  newNodeWrapImg.style.cssText = "position:relative; z-index: 99999;";
-	  // Resolve issue: document listen click event doesn't work on mobile
 	  newNodeWrapImg.addEventListener("click", () => {
 	  });
-
 	  let imgWidth = this.el.offsetWidth;
 	  let imgHeight = this.el.offsetHeight;
 
@@ -211,7 +206,10 @@
   };
   Actions.prototype.handleEvt = function () {
 	let elZoomedData = document.getElementsByClassName("vz-zoomed")[0].data;
-	elZoomedData.zoomCancel();
+	document.removeEventListener("scroll", elZoomedData.handleEvt);
+	setTimeout(() => {
+	  elZoomedData.zoomCancel();
+	}, 200);
   };
 
   Actions.prototype.effectTranslate = function (toggle) {
