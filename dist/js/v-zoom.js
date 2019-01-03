@@ -12,9 +12,6 @@
  * The MIT License. Copyright © 2018 xuandieu
  */
 
-
-
-
 +function () {
   "use strict";
 
@@ -36,6 +33,7 @@
   };
 
   let elementsWillZoom = [];
+  let elementZoomed = "";
   let VZoom = function () {
 	let init = function (selector, option) {
 	  option = {...DefaultOptions, ...option};
@@ -65,6 +63,7 @@
 		return;
 	  }
 
+	  elementZoomed = e.target;
 	  e.target.classList.add("vz-zoomed");
 	  e.target.style.cursor = "zoom-out";
 	  this.handleBackground(true);
@@ -122,6 +121,7 @@
 		  background.remove();
 		  clearInterval(this.IntervalIdList.backgroundPageOpacity);
 		  document.body.style.removeProperty("pointer-events");
+		  // Reset value when executed event done.
 		  this.currentTimeExecutedEvent = 0;
 		}
 		else {
@@ -203,8 +203,7 @@
 	}
   };
   Actions.prototype.handleScrollEvt = function () {
-	let elZoomedData = elementsWillZoom[0].data;
-	document.removeEventListener("scroll", elZoomedData.handleScrollEvt);
+	let elZoomedData = elementZoomed.data;
 	setTimeout(() => {
 	  elZoomedData.zoomCancel();
 	}, 195);
@@ -219,8 +218,7 @@
 	}
   };
   Actions.prototype.handleClickEvt = function () {
-	let elZoomedData = elementsWillZoom[0].data;
-	document.removeEventListener("scroll", elZoomedData.handleClickEvt);
+	let elZoomedData = elementZoomed.data;
 	elZoomedData.zoomCancel();
   };
 
@@ -298,6 +296,7 @@
   };
 
   Actions.prototype.zoomCancel = function () {
+	elementZoomed = "";
 	this.el.classList.remove("vz-zoomed");
 	this.el.style.cursor = "zoom-in";
 	this.handleBackground(false);
@@ -342,6 +341,7 @@
 		el.data.zoomCancel();
 	  }
 	  el.style.removeProperty("cursor");
+	  el.data = {};
 	})
   };
 
