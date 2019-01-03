@@ -73,7 +73,7 @@ let vz = VZoom.init("img", {
 ```
 
 ### Methods
-####destroy()
+#### destroy()
 ```js
 // Retrieving the v-zoom instance
 vz.destroy();
