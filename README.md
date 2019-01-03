@@ -75,7 +75,6 @@ let vz = VZoom.init("img", {
 ### Methods
 #### destroy()
 ```js
-// Retrieving the v-zoom instance
 vz.destroy();
 ```
 Destroys the v-zoom instance, cleans up - removes event listeners, restores default, etc.
